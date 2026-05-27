@@ -1,0 +1,13 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,sns
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+      - DEBUG=0
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./init-scripts:/etc/localstack/init/ready.d"
