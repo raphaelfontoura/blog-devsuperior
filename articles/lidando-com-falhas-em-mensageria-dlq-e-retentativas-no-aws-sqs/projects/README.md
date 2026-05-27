@@ -24,7 +24,7 @@ Quatro microsserviços Spring Boot conversando via **AWS SNS FIFO + SQS FIFO**, 
 
 - Java 25
 - Docker rodando (Docker Desktop ou Rancher Desktop)
-- `awslocal` para inspecionar a topologia (`pip install awscli-local`)
+- `aws cli` instalado (para inspecionar a topologia apontando `--endpoint-url=http://localhost:4566`)
 - Token do LocalStack ([crie uma conta gratuita](https://app.localstack.cloud/auth-tokens))
 
 ## 🚀 Subindo tudo junto
@@ -42,8 +42,8 @@ cd localstack && docker-compose up -d && cd ..
 docker logs -f localstack 2>&1 | grep -m1 "Topologia criada"
 
 # 4. Confirme topology
-awslocal --endpoint-url http://localhost:4566 sqs list-queues
-awslocal --endpoint-url http://localhost:4566 sns list-topics
+aws --endpoint-url=http://localhost:4566 sqs list-queues --region us-east-1
+aws --endpoint-url=http://localhost:4566 sns list-topics --region us-east-1
 
 # 5. Suba os 4 microsserviços (cada um em um terminal)
 cd ms-ticket-ingestor      && ./mvnw spring-boot:run
@@ -140,9 +140,10 @@ Tentativa #3 de processar mensagem ... falhou: Gateway de impressao indisponivel
 Confirme que a mensagem está na DLQ:
 
 ```bash
-awslocal --endpoint-url http://localhost:4566 sqs get-queue-attributes \
+aws --endpoint-url=http://localhost:4566 sqs get-queue-attributes \
   --queue-url http://localhost:4566/000000000000/fulfillment-dlq.fifo \
-  --attribute-names ApproximateNumberOfMessages
+  --attribute-names ApproximateNumberOfMessages \
+  --region us-east-1
 ```
 
 Deve retornar `"ApproximateNumberOfMessages": "1"`.
@@ -159,19 +160,20 @@ cd ms-fulfillment
 E dispare o redrive nativo do SQS:
 
 ```bash
-awslocal --endpoint-url http://localhost:4566 sqs start-message-move-task \
-  --source-arn arn:aws:sqs:us-east-1:000000000000:fulfillment-dlq.fifo
+aws --endpoint-url=http://localhost:4566 sqs start-message-move-task \
+  --source-arn arn:aws:sqs:us-east-1:000000000000:fulfillment-dlq.fifo \
+  --region us-east-1
 ```
 
 Em segundos a mensagem volta para a `fulfillment-queue.fifo`, é consumida pelo `ms-fulfillment` e o QR code é liberado.
 
 ## 🔧 Subindo separado
 
-### Só o LocalStack (para experimentar com `awslocal`)
+### Só o LocalStack (para inspecionar a topologia)
 
 ```bash
 cd localstack && docker-compose up -d
-awslocal --endpoint-url http://localhost:4566 sqs list-queues
+aws --endpoint-url=http://localhost:4566 sqs list-queues --region us-east-1
 ```
 
 ### Só os serviços do caminho feliz (sem DLQ em jogo)
