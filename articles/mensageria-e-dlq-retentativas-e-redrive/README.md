@@ -2,7 +2,7 @@
 
 ## Metadados
 
-- Titulo: Mensageria, DLQ, Retentativas e Redrive
+- Titulo: Mensageria e DLQ: Retentativas e Redrive
 - Stack: Java, Spring Boot, AWS, SQS, SNS, Docker, Localstack
 - Post: https://devsuperior.com.br/blog/mensageria-e-dlq-retentativas-e-redrive
 
