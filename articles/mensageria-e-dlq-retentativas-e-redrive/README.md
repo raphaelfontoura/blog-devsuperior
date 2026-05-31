@@ -1,8 +1,8 @@
-# lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs
+# mensageria-e-dlq-retentativas-e-redrive
 
 ## Metadados
 
-- Titulo: Lidando com falhas em mensageria, DLQ e Retentativas no AWS SQS
+- Titulo: Mensageria, DLQ, Retentativas e Redrive
 - Stack: Java, Spring Boot, AWS, SQS, SNS, Docker, Localstack
 
 ## Projetos
@@ -15,14 +15,14 @@
 #### Execucao local
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/localstack
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/localstack
 docker-compose up -d
 ```
 
 #### Testes
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/localstack
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/localstack
 docker logs -f localstack | grep -m1 "Topologia criada"
 ```
 
@@ -34,14 +34,14 @@ docker logs -f localstack | grep -m1 "Topologia criada"
 #### Execucao local
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-ticket-ingestor
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-ticket-ingestor
 ./mvnw spring-boot:run
 ```
 
 #### Testes
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-ticket-ingestor
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-ticket-ingestor
 ./mvnw test
 ```
 
@@ -53,14 +53,14 @@ cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/proje
 #### Execucao local
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-reservation-handler
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-reservation-handler
 ./mvnw spring-boot:run
 ```
 
 #### Testes
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-reservation-handler
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-reservation-handler
 ./mvnw test
 ```
 
@@ -72,14 +72,14 @@ cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/proje
 #### Execucao local
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-notification
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-notification
 ./mvnw spring-boot:run
 ```
 
 #### Testes
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-notification
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-notification
 ./mvnw test
 ```
 
@@ -91,13 +91,13 @@ cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/proje
 #### Execucao local
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-fulfillment
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-fulfillment
 ./mvnw spring-boot:run
 ```
 
 #### Testes
 
 ```bash
-cd articles/lidando-com-falhas-em-mensageria-dlq-e-retentativas-no-aws-sqs/projects/ms-fulfillment
+cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-fulfillment
 ./mvnw test
 ```
