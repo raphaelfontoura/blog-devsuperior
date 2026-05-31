@@ -4,100 +4,14 @@
 
 - Titulo: Mensageria, DLQ, Retentativas e Redrive
 - Stack: Java, Spring Boot, AWS, SQS, SNS, Docker, Localstack
+- Post: https://devsuperior.com.br/blog/mensageria-e-dlq-retentativas-e-redrive
 
 ## Projetos
 
-### localstack
+- `projects/localstack`, infra local (SQS + SNS via LocalStack, topologia criada por init script)
+- `projects/ms-ticket-ingestor` (8081), recebe POST `/api/reservations` e enfileira
+- `projects/ms-reservation-handler` (8082), valida, calcula total e publica evento
+- `projects/ms-notification` (8083), SseEmitter por `reservationId`
+- `projects/ms-fulfillment` (8084), consumer com errorHandler, unico com DLQ
 
-- Caminho: `projects/localstack`
-- Objetivo: Infra local para simular AWS SQS e SNS (3 filas FIFO HT principais + 1 DLQ FIFO + 1 topic FIFO)
-
-#### Execucao local
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/localstack
-docker-compose up -d
-```
-
-#### Testes
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/localstack
-docker logs -f localstack | grep -m1 "Topologia criada"
-```
-
-### ms-ticket-ingestor
-
-- Caminho: `projects/ms-ticket-ingestor`
-- Objetivo: Servico que recebe POST /api/reservations e enfileira na reservation-queue.fifo
-
-#### Execucao local
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-ticket-ingestor
-./mvnw spring-boot:run
-```
-
-#### Testes
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-ticket-ingestor
-./mvnw test
-```
-
-### ms-reservation-handler
-
-- Caminho: `projects/ms-reservation-handler`
-- Objetivo: Consumer da reservation-queue, valida, calcula total com taxa e publica ReservationConfirmedEvent no SNS
-
-#### Execucao local
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-reservation-handler
-./mvnw spring-boot:run
-```
-
-#### Testes
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-reservation-handler
-./mvnw test
-```
-
-### ms-notification
-
-- Caminho: `projects/ms-notification`
-- Objetivo: Consumer da notification-queue, mantem SseEmitter por reservationId para confirmacao em tempo real
-
-#### Execucao local
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-notification
-./mvnw spring-boot:run
-```
-
-#### Testes
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-notification
-./mvnw test
-```
-
-### ms-fulfillment
-
-- Caminho: `projects/ms-fulfillment`
-- Objetivo: Consumer da fulfillment-queue com errorHandler customizado, simula gateway de impressao via profile Spring gateway-down; unico consumer com DLQ
-
-#### Execucao local
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-fulfillment
-./mvnw spring-boot:run
-```
-
-#### Testes
-
-```bash
-cd articles/mensageria-e-dlq-retentativas-e-redrive/projects/ms-fulfillment
-./mvnw test
-```
+Para subir tudo e rodar o roteiro completo, consulte [`projects/README.md`](projects/README.md).
