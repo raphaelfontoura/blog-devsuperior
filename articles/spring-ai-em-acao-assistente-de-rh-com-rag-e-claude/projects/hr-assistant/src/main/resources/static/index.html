@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente de RH - Aurora Car Dealer</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { font-size: 1.3rem; }
+        #chat { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; min-height: 320px; }
+        .msg { margin-bottom: 1rem; }
+        .user { font-weight: 600; white-space: pre-wrap; }
+        .bot { color: #1a4d2e; }
+        .bot .prefix { font-weight: 600; }
+        /* estilos do conteudo renderizado em markdown */
+        .bot .content { display: block; margin-top: 0.25rem; }
+        .bot .content h1, .bot .content h2, .bot .content h3 { font-size: 1rem; margin: 0.6rem 0 0.3rem; }
+        .bot .content p { margin: 0.4rem 0; }
+        .bot .content ul, .bot .content ol { margin: 0.4rem 0; padding-left: 1.4rem; }
+        .bot .content li { margin: 0.15rem 0; }
+        .bot .content code { background: #eef3ef; padding: 0.05rem 0.3rem; border-radius: 4px; font-size: 0.9em; }
+        .bot .content pre { background: #eef3ef; padding: 0.6rem; border-radius: 6px; overflow-x: auto; }
+        .bot .content pre code { background: none; padding: 0; }
+        .bot .content a { color: #1a4d2e; }
+        #header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        #form { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        #input { flex: 1; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; }
+        button { padding: 0.6rem 1rem; border: 0; border-radius: 6px; background: #1a4d2e; color: #fff; cursor: pointer; }
+        button:disabled { opacity: 0.5; cursor: default; }
+        #newChat { background: #fff; color: #1a4d2e; border: 1px solid #1a4d2e; font-size: 0.85rem; padding: 0.4rem 0.8rem; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Assistente de RH - Aurora Car Dealer</h1>
+        <button type="button" id="newChat">Nova conversa</button>
+    </div>
+    <div id="chat"></div>
+    <form id="form">
+        <input id="input" type="text" placeholder="Pergunte sobre as politicas de RH..." autocomplete="off" required>
+        <button type="submit" id="send">Enviar</button>
+    </form>
+
+    <script>
+        // 1) conversationId persistente por navegador
+        function getConversationId() {
+            let id = localStorage.getItem("conversationId");
+            if (!id) {
+                id = crypto.randomUUID();
+                localStorage.setItem("conversationId", id);
+            }
+            return id;
+        }
+
+        // inicia uma sessao nova: novo conversationId e tela limpa
+        function startNewConversation() {
+            localStorage.setItem("conversationId", crypto.randomUUID());
+            chat.innerHTML = "";
+            input.focus();
+        }
+
+        const chat = document.getElementById("chat");
+        const form = document.getElementById("form");
+        const input = document.getElementById("input");
+        const sendBtn = document.getElementById("send");
+        const newChatBtn = document.getElementById("newChat");
+
+        newChatBtn.addEventListener("click", startNewConversation);
+
+        // escapa HTML para evitar XSS antes de aplicar a formatacao markdown
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
+        // renderizador de markdown minimo e seguro (escapa primeiro, formata depois)
+        function renderMarkdown(md) {
+            const blocks = [];
+            // 1) blocos de codigo ```...``` viram placeholders para nao sofrer outras regras
+            let text = escapeHtml(md).replace(/```([\s\S]*?)```/g, (_, code) => {
+                blocks.push("<pre><code>" + code.replace(/^\n+|\n+$/g, "") + "</code></pre>");
+                return "\u0000" + (blocks.length - 1) + "\u0000";
+            });
+
+            text = text
+                .replace(/`([^`]+)`/g, "<code>$1</code>")                 // codigo inline
+                .replace(/^###\s+(.*)$/gm, "<h3>$1</h3>")                 // titulos
+                .replace(/^##\s+(.*)$/gm, "<h2>$1</h2>")
+                .replace(/^#\s+(.*)$/gm, "<h1>$1</h1>")
+                .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")       // negrito
+                .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")       // italico
+                // links apenas http/https (evita javascript:)
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+                         '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            // 2) listas (agrupa linhas consecutivas)
+            text = text
+                .replace(/(?:^[-*]\s+.*(?:\n|$))+/gm, (m) =>
+                    "<ul>" + m.trim().split(/\n/).map(l => "<li>" + l.replace(/^[-*]\s+/, "") + "</li>").join("") + "</ul>")
+                .replace(/(?:^\d+\.\s+.*(?:\n|$))+/gm, (m) =>
+                    "<ol>" + m.trim().split(/\n/).map(l => "<li>" + l.replace(/^\d+\.\s+/, "") + "</li>").join("") + "</ol>");
+
+            // 3) paragrafos e quebras de linha simples
+            text = text
+                .split(/\n{2,}/)
+                .map(part => /^\s*<(h\d|ul|ol|pre)/.test(part) ? part : "<p>" + part.replace(/\n/g, "<br>") + "</p>")
+                .join("");
+
+            // 4) restaura os blocos de codigo
+            return text.replace(/\u0000(\d+)\u0000/g, (_, i) => blocks[Number(i)]);
+        }
+
+        function appendMessage(cssClass, prefix, text) {
+            const div = document.createElement("div");
+            div.className = "msg " + cssClass;
+            div.textContent = prefix + text;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return div;
+        }
+
+        // bolha do bot: rotulo fixo + area de conteudo que renderiza markdown
+        function appendBotMessage() {
+            const div = document.createElement("div");
+            div.className = "msg bot";
+            const label = document.createElement("span");
+            label.className = "prefix";
+            label.textContent = "Assistente:";
+            const content = document.createElement("span");
+            content.className = "content";
+            div.appendChild(label);
+            div.appendChild(content);
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return content;
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = "";
+            sendBtn.disabled = true;
+            appendMessage("user", "Voce: ", message);
+
+            // area de conteudo do bot, preenchida token a token e renderizada como markdown
+            const botContent = appendBotMessage();
+            let botText = "";
+
+            try {
+                const response = await fetch("/chat/stream", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Conversation-Id": getConversationId()
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    botContent.textContent = " [erro " + response.status + "]";
+                    return;
+                }
+
+                // 2) leitura incremental do corpo (ReadableStream) com parsing SSE correto
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                // buffer acumula bytes ate fechar um evento SSE (delimitado por linha em branco).
+                // Cada evento pode ter varias linhas "data:" (foi assim que o \n do token foi
+                // codificado); elas sao reunidas com \n. NAO removemos espaco apos "data:",
+                // pois o espaco faz parte do token (o backend nao adiciona espaco de formatacao).
+                let sseBuffer = "";
+
+                function decodeSseEvent(rawEvent) {
+                    const dataLines = [];
+                    for (const line of rawEvent.split("\n")) {
+                        if (line.startsWith("data:")) {
+                            dataLines.push(line.slice(5));
+                        }
+                    }
+                    return dataLines.join("\n");
+                }
+
+                function consumeSse(text, flush) {
+                    sseBuffer += text.replace(/\r\n/g, "\n");
+                    let sep;
+                    while ((sep = sseBuffer.indexOf("\n\n")) !== -1) {
+                        const rawEvent = sseBuffer.slice(0, sep);
+                        sseBuffer = sseBuffer.slice(sep + 2);
+                        botText += decodeSseEvent(rawEvent);
+                    }
+                    if (flush && sseBuffer.length) {
+                        botText += decodeSseEvent(sseBuffer);
+                        sseBuffer = "";
+                    }
+                }
+
+                let done = false;
+                while (!done) {
+                    const { value, done: streamDone } = await reader.read();
+                    done = streamDone;
+                    if (value) {
+                        consumeSse(decoder.decode(value, { stream: true }), false);
+                        // re-renderiza o markdown acumulado a cada chunk recebido
+                        botContent.innerHTML = renderMarkdown(botText);
+                        chat.scrollTop = chat.scrollHeight;
+                    }
+                }
+                // garante o ultimo evento, caso nao venha seguido de linha em branco
+                consumeSse("", true);
+                botContent.innerHTML = renderMarkdown(botText);
+                chat.scrollTop = chat.scrollHeight;
+            } catch (err) {
+                botContent.textContent = " [falha de rede] " + err;
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>

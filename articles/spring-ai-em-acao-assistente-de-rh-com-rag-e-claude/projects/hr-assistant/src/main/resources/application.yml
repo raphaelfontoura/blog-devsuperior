@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ragdb
+    username: postgres
+    password: postgres
+  ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: true        # cria a extensao, a tabela e o indice no primeiro start
+        index-type: HNSW               # indice de busca aproximada de vizinhos
+        distance-type: COSINE_DISTANCE # distancia que casa com embeddings de sentenca
+        table-name: vector_store
+    chat:
+      memory:
+        redis:
+          host: localhost
+          port: 6379
+          time-to-live: PT30M          # a conversa expira apos 30 min de inatividade
+
+# bloco proprio do projeto (nao e do framework)
+app:
+  rag:
+    top-k: 5                           # quantos chunks o QuestionAnswerAdvisor recupera
+    similarity-threshold: 0.4          # piso de similaridade do retrieval
+  memory:
+    max-messages: 20                   # tamanho da janela do MessageWindowChatMemory
+
+# nivel DEBUG apenas para o advisor que loga prompt (IDA) e resposta (VOLTA)
+logging:
+  level:
+    br.com.devsuperior.hr_assistant.chat.PromptLoggingAdvisor: DEBUG
